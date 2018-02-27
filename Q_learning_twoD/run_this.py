@@ -12,8 +12,8 @@ The RL is in RL_brain.py.
 View more on my tutorial page: https://morvanzhou.github.io/tutorials/
 """
 
-from Q_learning_twoD.maze_env import Maze
-from Q_learning_twoD.RL_brain import QLearningTable
+from RL_code.Q_learning_twoD.maze_env import Maze
+from RL_code.Q_learning_twoD.RL_brain import QLearningTable
 
 N_EPISODE = 100
 
@@ -26,16 +26,19 @@ def update():
             env.render()
             # 根据观察到的状态选择动作
             action = RL.choose_action(str(observation))
-
             # 更新环境,图形界面反馈用户
             observation_, reward, done = env.step(action)
-
+            # print("\r\n原state和action和reward和新state: ")
+            # print(str(observation))
+            # print(action)
+            # print(reward)
+            # print(observation_)
+            # input()
             # 从上一步的转移过程得到的新的状态计算反馈信息并学习
             RL.learn(str(observation), action, reward, str(observation_))
 
             # swap observation
             observation = observation_
-
             # break while loop when end of this episode
             if done:
                 break
