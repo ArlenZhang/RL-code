@@ -50,7 +50,7 @@ class RL(object):
 
 # backward eligibility traces
 class SarsaLambdaTable(RL):
-    def __init__(self, actions, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9, trace_decay=0.5):
+    def __init__(self, actions, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9, trace_decay=0.9):
         super(SarsaLambdaTable, self).__init__(actions, learning_rate, reward_decay, e_greedy)
 
         # backward view, eligibility trace.
@@ -77,6 +77,7 @@ class SarsaLambdaTable(RL):
             q_target = reward + self.gamma * self.q_table.loc[s_temp, action_temp]
         else:
             q_target = reward
+        error = q_target - q_last
         # Sarsa(LAMBDA)不之处在于下面的过程
         # 对于state-action对的访问次数进行标记
         # 方案 1:
@@ -86,7 +87,7 @@ class SarsaLambdaTable(RL):
         self.eligibility_trace.loc[s_last, action_last] = 1  # 保持该state-action的访问当前state的为峰值
 
         # Q update, 每一次对全表中标记过的全体Q表数据进行更新
-        self.q_table += self.lr * (q_target - q_last) * self.eligibility_trace
+        self.q_table += self.lr * error * self.eligibility_trace
 
         # 更新之后对标记信息进行衰减，保证了距离当前action越近的标记的价值越大
         self.eligibility_trace *= self.gamma*self.lambda_

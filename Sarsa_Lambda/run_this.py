@@ -22,7 +22,7 @@ def update():
             # 刷新图形界面环境
             env.render()
             s_temp, reward, done = env.step(action_last)
-            action_temp = RL.choose_action(str(s_last))
+            action_temp = RL.choose_action(str(s_temp))
             # RL learn
             RL.learn(str(s_last), action_last, reward, str(s_temp), action_temp)
             s_last = s_temp
