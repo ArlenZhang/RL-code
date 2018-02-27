@@ -50,7 +50,7 @@ class RL(object):
 
 # backward eligibility traces
 class SarsaLambdaTable(RL):
-    def __init__(self, actions, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9, trace_decay=0.7):
+    def __init__(self, actions, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9, trace_decay=0.5):
         super(SarsaLambdaTable, self).__init__(actions, learning_rate, reward_decay, e_greedy)
 
         # backward view, eligibility trace.
