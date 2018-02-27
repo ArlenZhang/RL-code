@@ -5,6 +5,7 @@ Unlike Q learning which is a offline updating method, Sarsa is updating while in
 
 You will see the sarsa is more coward when punishment is close because it cares about all behaviours,
 while q learning is more brave because it only cares about maximum behaviour.
+当前学习过程中只加入了正反馈，也可以在调入坑的时候加入负反馈，这样能更快找到宝藏。
 """
 
 from RL_code.Sarsa_Lambda.maze_env import Maze
