@@ -1,0 +1,3 @@
+
+    Sarsa和QLearning不同之处在于Sarsa去掉max_value部分，取而代之的是实实在在的下一步会采取
+的action, 所以Sarsa也被称为On-policy，而QLearning被称为off-policy
