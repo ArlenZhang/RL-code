@@ -27,15 +27,15 @@ class QLearningTable:
         return action
 
     # 对操作得到的新状态的反馈计算和table表的数值更新
-    def learn(self, temp_state, action, reward, next_state):
-        self.check_state_exist(next_state)
-        q_predict = self.q_table.loc[temp_state, action]
-        if next_state != 'terminal':
-            q_target = reward + self.gamma * self.q_table.loc[next_state, :].max()  # next state is not terminal
+    def learn(self, s_last, action, reward, s_temp):
+        self.check_state_exist(s_temp)
+        q_last = self.q_table.loc[s_last, action]
+        if s_temp != 'terminal':
+            q_target = reward + self.gamma * self.q_table.loc[s_temp, :].max()  # next state is not terminal
         else:
             q_target = reward  # next state is terminal
         # 修改这个action在之前状态下的值，相当于给出反馈
-        self.q_table.loc[temp_state, action] += self.lr * (q_target - q_predict)  # update
+        self.q_table.loc[s_last, action] = q_last + self.lr * (q_target - q_last)  # update
 
     def check_state_exist(self, state):
         if state not in self.q_table.index:

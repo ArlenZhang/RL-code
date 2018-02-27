@@ -52,14 +52,14 @@ class QLearningTable(RL):
     def __init__(self, actions, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9):
         super(QLearningTable, self).__init__(actions, learning_rate, reward_decay, e_greedy)
 
-    def learn(self, s, a, r, s_):
-        self.check_state_exist(s_)
-        q_predict = self.q_table.loc[s, a]
-        if s_ != 'terminal':
-            q_target = r + self.gamma * self.q_table.loc[s_, :].max()  # next state is not terminal
+    def learn(self, s_last, action, reward, s_temp):
+        self.check_state_exist(s_temp)
+        q_last = self.q_table.loc[s_last, action]
+        if s_temp != "terminal":
+            q_target = reward + self.gamma * self.q_table.loc[s_temp, :].max()
         else:
-            q_target = r  # next state is terminal
-        self.q_table.loc[s, a] += self.lr * (q_target - q_predict)  # update
+            q_target = reward
+        self.q_table.loc[s_last, action] = q_last + self.lr * (q_target - q_last)
 
 
 # on-policy
@@ -68,11 +68,11 @@ class SarsaTable(RL):
     def __init__(self, actions, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9):
         super(SarsaTable, self).__init__(actions, learning_rate, reward_decay, e_greedy)
 
-    def learn(self, s, a, r, s_, a_):
-        self.check_state_exist(s_)
-        q_predict = self.q_table.loc[s, a]
-        if s_ != 'terminal':
-            q_target = r + self.gamma * self.q_table.loc[s_, a_]  # next state is not terminal
+    def learn(self, s_last, action_last, reward, s_temp, action_temp):
+        self.check_state_exist(s_temp)
+        q_last = self.q_table.loc[s_last, action_last]
+        if s_temp != "terminal":
+            q_target = reward + self.gamma * self.q_table.loc[s_temp, action_temp]
         else:
-            q_target = r  # next state is terminal
-        self.q_table.loc[s, a] += self.lr * (q_target - q_predict)  # update
+            q_target = reward
+        self.q_table.loc[s_last, action_last] = q_last + self.lr * (q_target - q_last)
