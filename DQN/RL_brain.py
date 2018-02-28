@@ -80,7 +80,7 @@ class DeepQNetwork:
                 w2 = tf.get_variable('w2', [n_l1, self.n_actions], initializer=w_initializer, collections=c_names)
                 b2 = tf.get_variable('b2', [1, self.n_actions], initializer=b_initializer, collections=c_names)
                 self.q_eval = tf.matmul(l1, w2) + b2
-
+        # 定义损失函数，也就是QLearning中的(Q_target - Q_predict)
         with tf.variable_scope('loss'):
             self.loss = tf.reduce_mean(tf.squared_difference(self.q_target, self.q_eval))
         with tf.variable_scope('train'):
@@ -113,7 +113,6 @@ class DeepQNetwork:
         # update the memory
         index = self.memory_counter % self.memory_size
         self.memory[index, :] = transition
-
         self.memory_counter += 1
 
     # 选择动作
@@ -129,33 +128,35 @@ class DeepQNetwork:
             action = np.random.randint(0, self.n_actions)
         return action
 
+    # 学习的是神经网络参数而不是Q表格
     def learn(self):
-        # check to replace target parameters
+        # 学习每经过300次
         if self.learn_step_counter % self.replace_target_iter == 0:
             self.sess.run(self.replace_target_op)
             print('\ntarget_params_replaced\n')
 
-        # sample batch memory from all memory
+        # 从所有的记忆中采样部分,从记忆中学习
         if self.memory_counter > self.memory_size:
             sample_index = np.random.choice(self.memory_size, size=self.batch_size)
         else:
             sample_index = np.random.choice(self.memory_counter, size=self.batch_size)
         batch_memory = self.memory[sample_index, :]
-
+        # 对模型输入state根据原有的模型参数计算得到两组q值，分别为Q评估和Q现实
         q_next, q_eval = self.sess.run(
             [self.q_next, self.q_eval],
             feed_dict={
+                # arr中每一行的存储: self.memory[index, :] = np.hstack((s_last, [action, reward], s_temp))
                 self.s_: batch_memory[:, -self.n_features:],  # fixed params
                 self.s: batch_memory[:, :self.n_features],  # newest params
             })
 
-        # change q_target w.r.t q_eval's action
+        # 下面就是QLearning的算法逻辑使用, q_eval代表Q评估, q_target是Q现实，从记忆库中得到
         q_target = q_eval.copy()
-
         batch_index = np.arange(self.batch_size, dtype=np.int32)
-        eval_act_index = batch_memory[:, self.n_features].astype(int)
-        reward = batch_memory[:, self.n_features + 1]
+        eval_act_index = batch_memory[:, self.n_features].astype(int)  # 每一行的第二列是对应action
+        reward = batch_memory[:, self.n_features + 1]  # 每一行的第三列是reward
 
+        # 由此可见，DQN是Sarsa算法+神经网络而不是QLearning+神经网络
         q_target[batch_index, eval_act_index] = reward + self.gamma * np.max(q_next, axis=1)
 
         """
@@ -190,7 +191,7 @@ class DeepQNetwork:
                                                 self.q_target: q_target})
         self.cost_his.append(self.cost)
 
-        # increasing epsilon 学习到一定程度之后提高选择最优action的百分比，最终优化
+        # 每次学习一次就提高一点用于10%随机选择的Epsilon来提高决策能力,信任网络参数在越来越可靠
         self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max
         self.learn_step_counter += 1
 
@@ -200,6 +201,3 @@ class DeepQNetwork:
         plt.ylabel('Cost')
         plt.xlabel('training steps')
         plt.show()
-
-
-
