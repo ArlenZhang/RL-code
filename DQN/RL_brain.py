@@ -22,23 +22,24 @@ class DeepQNetwork:
             memory_size=500,
             batch_size=32,
             e_greedy_increment=None,
-            output_graph=False,
+            output_graph=False
     ):
-        self.n_actions = n_actions
-        self.n_features = n_features
-        self.lr = learning_rate
-        self.gamma = reward_decay
-        self.epsilon_max = e_greedy
-        self.replace_target_iter = replace_target_iter
-        self.memory_size = memory_size
-        self.batch_size = batch_size
-        self.epsilon_increment = e_greedy_increment
+        # 初始化超参数
+        self.n_actions = n_actions  # 可选动作
+        self.n_features = n_features  # 观察值转成n_features列的数据
+        self.lr = learning_rate  # 学习效率
+        self.gamma = reward_decay   # 反馈衰减
+        self.epsilon_max = e_greedy  # epsilon的数据选择使用最优action
+        self.replace_target_iter = replace_target_iter  # 学习隔300步更新一次target值
+        self.memory_size = memory_size  # 记忆库的大小
+        self.batch_size = batch_size  # 批处理量
+        self.epsilon_increment = e_greedy_increment  # 模型训练一段时间，越来越偏向最优action选择，所以增大epsilon
+        # 如果epsilon不是0那么允许epsilon从0开始累加，否则用固定值0.9
         self.epsilon = 0 if e_greedy_increment is not None else self.epsilon_max
-
-        # total learning step
+        # 全局学习计数，learn一次就累加1
         self.learn_step_counter = 0
 
-        # initialize zero memory [s, a, r, s_]
+        # 创建记忆库 initialize zero memory [s, a, r, s_]
         self.memory = np.zeros((self.memory_size, n_features * 2 + 2))
 
         # consist of [target_net, evaluate_net]
@@ -52,7 +53,7 @@ class DeepQNetwork:
         if output_graph:
             # $ tensorboard --logdir=logs
             # tf.train.SummaryWriter soon be deprecated, use following
-            tf.summary.FileWriter("../../logs/", self.sess.graph)
+            tf.summary.FileWriter("../../graphs/", self.sess.graph)
 
         self.sess.run(tf.global_variables_initializer())
         self.cost_his = []
@@ -130,7 +131,7 @@ class DeepQNetwork:
 
     # 学习的是神经网络参数而不是Q表格
     def learn(self):
-        # 学习每经过300次
+        # 学习每经过300次,更换一次target
         if self.learn_step_counter % self.replace_target_iter == 0:
             self.sess.run(self.replace_target_op)
             print('\ntarget_params_replaced\n')
