@@ -20,8 +20,8 @@ tf.set_random_seed(1)
 class DeepQNetwork:
     def __init__(self, n_actions, n_features, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9,
                  replace_target_iter=300, memory_size=500, batch_size=32, e_greedy_increment=None, output_graph=False):
-        self.cost = self.memory_counter = self._train_op = self.loss = self.q_target = self.s_ = self.s = self.sess = \
-            self.replace_target_op = None
+        self.q_eval = self.q_next = self.cost = self.memory_counter = self._train_op = self.loss = self.q_target = self.s_ = self.s =\
+            self.sess = self.replace_target_op = None
         # ========== 初始化模型的超参数
         self.lr = learning_rate  # 学习效率
         self.batch_size = batch_size  # 批处理量
@@ -39,38 +39,32 @@ class DeepQNetwork:
 
         self.n_actions = n_actions  # 可选动作
         self.n_features = n_features  # 观察值转成n_features列的数据
-        self.replace_target_iter = replace_target_iter  # 学习隔replace_target_iter步更新一次target值
         self.memory_size = memory_size  # 记忆库的大小
+        self.memory = np.zeros((self.memory_size, n_features * 2 + 2))  # 创建初始记忆库
 
         # ========== 初始化全局变量
         self.learn_step_counter = 0  # learn一次就累加1
-        self.memory = np.zeros((self.memory_size, n_features * 2 + 2))  # 创建初始记忆库
+        self.replace_target_iter = replace_target_iter  # 学习隔replace_target_iter步更新一次target值
         self.cost_steps = []  # 存储各个批次网络的误差值
 
         # ========== 初始化模型
-        self.build()
+        self.add_placeholder()
+        self.build_net()
+        self.create_loss_opt()  # 创建计算loss和optimizer的操作
+        self.create_target_params_opt()  # 创建更新target网络参数的操作
 
         # ========== tensorflow 会话
         self.session_summary(output_graph=output_graph)
 
-    def build(self):
-        # 为之前观察值 state 创建place_holder作为eval网络的输入
+    def add_placeholder(self):
         self.s = tf.placeholder(tf.float32, [None, self.n_features], name='s')
-        # 采取action之后下一个状态的观察值state_创建place_holder作为target网络的输入
         self.s_ = tf.placeholder(tf.float32, [None, self.n_features], name='s_')
-        # 为真实的Q值创建placeholder 用于对比q_predict计算损失值
         self.q_target = tf.placeholder(tf.float32, [None, self.n_actions], name='Q_target')
-
-        self._build_net()  # 创建网络
-
-        self.create_loss_opt()  # 创建计算loss和optimizer的操作
-
-        self.update_target_params()  # 创建更新target网络参数的操作
 
     """
         创建两个结构相同参数不同的神经网络 target_n 和 eval_n
     """
-    def _build_net(self):
+    def build_net(self):
         # 创建评估网络
         with tf.variable_scope('eval_net'):
             # 第一层网络
@@ -107,6 +101,7 @@ class DeepQNetwork:
 
     # 计算损失
     def create_loss_opt(self):
+
         # 定义损失函数，也就是QLearning中的(Q_target - Q_predict)
         with tf.variable_scope('loss'):
             self.loss = tf.reduce_mean(tf.squared_difference(self.q_target, self.q_eval))
@@ -115,7 +110,7 @@ class DeepQNetwork:
             self._train_op = tf.train.RMSPropOptimizer(self.lr).minimize(self.loss)
 
     # 用Eval网络参数更新Target网络参数
-    def update_target_params(self):
+    def create_target_params_opt(self):
         # 定义获取target和eval网络的参数 w 和 b的操作
         t_params = tf.get_collection('target_net_params')
         e_params = tf.get_collection('eval_net_params')
