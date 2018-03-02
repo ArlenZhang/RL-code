@@ -48,7 +48,7 @@ class DeepQNetwork:
         self.cost_steps = []  # 存储各个批次网络的误差值
 
         # ========== 初始化模型
-        # self.add_placeholder()
+        self.add_placeholder()
         self._build_net()
         self.create_loss_opt()  # 创建计算loss和optimizer的操作
         self.create_target_params_opt()  # 创建更新target网络参数的操作
@@ -65,27 +65,9 @@ class DeepQNetwork:
         创建两个结构相同参数不同的神经网络 target_n 和 eval_n
     """
     def _build_net(self):
-        # 创建target目标神经网络
-        self.s_ = tf.placeholder(tf.float32, [None, self.n_features], name='s_')
-        with tf.variable_scope('target_net'):
-            # 第一层网络
-            with tf.variable_scope('l1'):
-                w1 = tf.get_variable('w1', [self.n_features, self.n_l1], initializer=self.w_initializer,
-                                     collections=self.c_names_t)
-                b1 = tf.get_variable('b1', [1, self.n_l1], initializer=self.b_initializer, collections=self.c_names_t)
-                l1 = tf.nn.relu(tf.matmul(self.s_, w1) + b1)
-
-            # 第二层神经网络
-            with tf.variable_scope('l2'):
-                w2 = tf.get_variable('w2', [self.n_l1, self.n_actions], initializer=self.w_initializer,
-                                     collections=self.c_names_t)
-                b2 = tf.get_variable('b2', [1, self.n_actions], initializer=self.b_initializer,
-                                     collections=self.c_names_t)
-                self.q_next = tf.matmul(l1, w2) + b2
-
         # 创建评估网络
-        self.s = tf.placeholder(tf.float32, [None, self.n_features], name='s')
-        self.q_target = tf.placeholder(tf.float32, [None, self.n_actions], name='Q_target')
+        # self.s = tf.placeholder(tf.float32, [None, self.n_features], name='s')
+        # self.q_target = tf.placeholder(tf.float32, [None, self.n_actions], name='Q_target')
         with tf.variable_scope('eval_net'):
             # 第一层网络
             with tf.variable_scope('l1'):
@@ -103,6 +85,24 @@ class DeepQNetwork:
                 b2 = tf.get_variable('b2', [1, self.n_actions], initializer=self.b_initializer,
                                      collections=self.c_names_e)
                 self.q_eval = tf.matmul(l1, w2) + b2
+
+        # 创建target目标神经网络
+        with tf.variable_scope('target_net'):
+            # self.s_ = tf.placeholder(tf.float32, [None, self.n_features], name='s_')
+            # 第一层网络
+            with tf.variable_scope('l1'):
+                w1 = tf.get_variable('w1', [self.n_features, self.n_l1], initializer=self.w_initializer,
+                                     collections=self.c_names_t)
+                b1 = tf.get_variable('b1', [1, self.n_l1], initializer=self.b_initializer, collections=self.c_names_t)
+                l1 = tf.nn.relu(tf.matmul(self.s_, w1) + b1)
+
+            # 第二层神经网络
+            with tf.variable_scope('l2'):
+                w2 = tf.get_variable('w2', [self.n_l1, self.n_actions], initializer=self.w_initializer,
+                                     collections=self.c_names_t)
+                b2 = tf.get_variable('b2', [1, self.n_actions], initializer=self.b_initializer,
+                                     collections=self.c_names_t)
+                self.q_next = tf.matmul(l1, w2) + b2
 
     # 计算损失
     def create_loss_opt(self):
