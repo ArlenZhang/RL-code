@@ -65,10 +65,10 @@ class DeepQNetwork:
         创建两个结构相同参数不同的神经网络 target_n 和 eval_n
     """
     def _build_net(self):
-        # 创建target目标神经网络
         # self.s = tf.placeholder(tf.float32, [None, self.n_features], name='s')
         # self.q_target = tf.placeholder(tf.float32, [None, self.n_actions], name='Q_target')
         # self.s_ = tf.placeholder(tf.float32, [None, self.n_features], name='s_')
+        # 创建target目标神经网络
         with tf.variable_scope('target_net'):
             # 第一层网络
             with tf.variable_scope('l1'):
