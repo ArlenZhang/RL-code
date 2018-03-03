@@ -10,7 +10,6 @@
 """
 import numpy as np
 import tensorflow as tf
-import util
 np.random.seed(1)
 tf.set_random_seed(1)
 
@@ -131,25 +130,32 @@ class DeepQNetwork:
     """
         QLearning 算法应用部分
     """
-    def learn(self):
-        # 学习每经过300次,更换一次target网络参数
-        if self.learn_step_counter % self.replace_target_iter == 0:
-            self.sess.run(self.replace_target_op)
-            print('\ntarget参数被更新\n')
 
-        # 从记忆库中选择batch_size的数据学习，这是RL应用神经网络的关键
+    # 准备训练数据
+    def get_data(self):
         # arr中每一行的存储: self.memory[index, :] = np.hstack((s_last, [action, reward], s_temp))
         if self.memory_counter > self.memory_size:
             sample_index = np.random.choice(self.memory_size, size=self.batch_size)
         else:
             sample_index = np.random.choice(self.memory_counter, size=self.batch_size)
         batch_memory = self.memory[sample_index, :]
+        states = batch_memory[:, :self.n_features]
+        states_ = batch_memory[:, -self.n_features:]
+        actions = batch_memory[:, self.n_features].astype(int)
+        rewards = batch_memory[:, self.n_features + 1]
+        return states_, states, actions, rewards
 
-        # 从batch_memory中提取四组信息 state, action, reward, state_
-        states_, states, actions, rewards = util.get_data(batch_memory, self.n_features)
+    def learn(self):
+        # 学习每经过300次,更换一次target网络参数
+        if self.learn_step_counter % self.replace_target_iter == 0:
+            self.sess.run(self.replace_target_op)
+            print('\ntarget参数被更新\n')
+
+        # 从记忆库memory中提取四组信息 state, action, reward, state_, 数据量为batch_size
+        states_, states, actions, rewards = self.get_data()
 
         # 对当前随机参数的模型输入state根据原有的模型参数计算得到两组q值，分别为 Q评估 和 Q现实
-        # 返回的是状态对应的分值，相当于查Q表的功能，用两个网络作为一个Q表能力更好
+        # 返回的是状态对应的分值，相当于查Q表
         q_eval, q_next = self.sess.run(
             [self.q_eval, self.q_next],
             feed_dict={
@@ -157,7 +163,7 @@ class DeepQNetwork:
                 self.s: states,  # 每个训练记录的state 值
             })
 
-        # Sarsa算法计算Q_target
+        # Q_learning 算法计算 Q_target
         q_target = q_eval.copy()
         batch_index = np.arange(self.batch_size, dtype=np.int32)
         q_target[batch_index, actions] = rewards + self.gamma * np.max(q_next, axis=1)

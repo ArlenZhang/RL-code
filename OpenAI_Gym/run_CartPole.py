@@ -8,7 +8,7 @@ gym: 0.7.3
 
 
 import gym
-from RL_brain import DeepQNetwork
+from RL_code.OpenAI_Gym.RL_brain import DeepQNetwork
 
 env = gym.make('CartPole-v0')
 env = env.unwrapped
