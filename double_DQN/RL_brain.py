@@ -57,7 +57,7 @@ class DoubleDQN:
         else:
             self.sess = sess
         if output_graph:
-            tf.summary.FileWriter("logs/", self.sess.graph)
+            tf.summary.FileWriter("../../graphs/double_DQN", self.sess.graph)
         self.cost_his = []
 
     def _build_net(self):
@@ -133,8 +133,8 @@ class DoubleDQN:
             [self.q_next, self.q_eval],
             feed_dict={self.s_: batch_memory[:, -self.n_features:],    # next observation
                        self.s: batch_memory[:, -self.n_features:]})    # next observation
-        q_eval = self.sess.run(self.q_eval, {self.s: batch_memory[:, :self.n_features]})
-
+        q_eval = self.sess.run(self.q_eval,
+                               feed_dict={self.s: batch_memory[:, :self.n_features]})
         q_target = q_eval.copy()
 
         batch_index = np.arange(self.batch_size, dtype=np.int32)

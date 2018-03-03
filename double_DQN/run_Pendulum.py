@@ -1,17 +1,16 @@
 """
-Double DQN & Natural DQN comparison,
-The Pendulum example.
+    Double DQN & Natural DQN comparison,
+    The Pendulum example.
 
-View more on my tutorial page: https://morvanzhou.github.io/tutorials/
+    View more on my tutorial page: https://morvanzhou.github.io/tutorials/
 
-Using:
-Tensorflow: 1.0
-gym: 0.8.0
+    Using:
+    Tensorflow: 1.0
+    gym: 0.8.0
 """
 
-
 import gym
-from RL_brain import DoubleDQN
+from RL_code.double_DQN.RL_brain import DoubleDQN
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -75,3 +74,7 @@ plt.ylabel('Q eval')
 plt.xlabel('training steps')
 plt.grid()
 plt.show()
+"""
+    在tensorboard中观察结果
+    tensorboard --logdir="graphs/double_DQN"
+"""

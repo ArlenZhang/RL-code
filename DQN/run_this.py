@@ -49,5 +49,5 @@ if __name__ == "__main__":
 
 """
     在tensorboard中观察结果
-    tensorboard --logdir="/home/arlenzhang/Desktop/RL/RL_Pro/logs"
+    tensorboard --logdir="graphs/DQN"
 """
